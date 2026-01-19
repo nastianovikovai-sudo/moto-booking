@@ -1,1 +1,34 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+
+enum BookingStatus { PENDING_PAYMENT CONFIRMED CANCELED }
+
+model Bike {
+  id            String   @id @default(cuid())
+  brand         String
+  model         String
+  pricePerDayRub Int     // цена в рублях (без копеек, для простоты)
+  prepDays      Int      @default(1)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  bookings      Booking[]
+}
+
+model Booking {
+  id          String        @id @default(cuid())
+  bikeId      String
+  startDate   DateTime      // UTC 00:00
+  endDate     DateTime      // UTC 00:00 (включительно)
+  prepDays    Int
+  status      BookingStatus @default(PENDING_PAYMENT)
+  totalRub    Int
+  payFirstDayRub Int
+  createdAt   DateTime      @default(now())
+
+  tbankPaymentId String?    @unique
+  tbankOrderId   String?    @unique
+
+  bike Bike @relation(fields: [bikeId], references: [id])
+  @@index([bikeId, startDate, endDate])
+}
 
